@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  pg_master:
+    image: postgres:15
+    container_name: pg_master
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: testDB
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_master_data:/var/lib/postgresql/data
+      - ./master-init:/docker-entrypoint-initdb.d
+      - ./master-config/postgresql.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    networks:
+      - pg_net
+
+  pg_replica:
+    image: postgres:15
+    container_name: pg_replica
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_replica_data:/var/lib/postgresql/data
+    depends_on:
+      - pg_master
+    networks:
+      - pg_net
+
+volumes:
+  pg_master_data:
+  pg_replica_data:
+
+networks:
+  pg_net:
